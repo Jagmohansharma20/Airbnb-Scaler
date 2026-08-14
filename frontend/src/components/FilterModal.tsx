@@ -8,6 +8,12 @@ import {
   Home, 
   Building2, 
   Hotel, 
+  Castle,
+  Trees,
+  Palmtree,
+  Tent,
+  Building,
+  Bed,
   Check, 
   SlidersHorizontal 
 } from 'lucide-react';
@@ -16,6 +22,7 @@ export interface FilterValues {
   minPrice?: number;
   maxPrice?: number;
   propertyType?: string;
+  placeType?: string;
   amenities: string[];
   minRating?: number;
 }
@@ -32,7 +39,19 @@ const PROPERTY_TYPES = [
   { label: 'All', icon: null },
   { label: 'House', icon: Home },
   { label: 'Apartment', icon: Building2 },
+  { label: 'Villa', icon: Castle },
   { label: 'Hotel', icon: Hotel },
+  { label: 'Cottage', icon: Building },
+  { label: 'Cabin', icon: Trees },
+  { label: 'Guesthouse', icon: Tent },
+  { label: 'Resort', icon: Palmtree },
+];
+
+const PLACE_TYPES = [
+  { label: 'Entire place', description: 'A place all to yourself', icon: Home },
+  { label: 'Private room', description: 'Your own room in a home, plus shared common areas', icon: Bed },
+  { label: 'Hotel room', description: 'A room in a hotel, hostel, or boutique stay', icon: Hotel },
+  { label: 'Shared room', description: 'A shared sleeping space in a hostel or room', icon: Building },
 ];
 
 const AMENITY_LIST = [
@@ -57,6 +76,9 @@ export function FilterModal({
   const [minPrice, setMinPrice] = useState<string>(filters.minPrice ? String(filters.minPrice) : '');
   const [maxPrice, setMaxPrice] = useState<string>(filters.maxPrice ? String(filters.maxPrice) : '');
   const [propertyType, setPropertyType] = useState<string>(filters.propertyType || 'All');
+  const [selectedPlaceTypes, setSelectedPlaceTypes] = useState<string[]>(
+    filters.placeType ? filters.placeType.split(',').map(s => s.trim()) : []
+  );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(filters.amenities || []);
   const [minRating, setMinRating] = useState<number>(filters.minRating || 0);
 
@@ -66,12 +88,21 @@ export function FilterModal({
       setMinPrice(filters.minPrice ? String(filters.minPrice) : '');
       setMaxPrice(filters.maxPrice ? String(filters.maxPrice) : '');
       setPropertyType(filters.propertyType || 'All');
+      setSelectedPlaceTypes(
+        filters.placeType ? filters.placeType.split(',').map(s => s.trim()).filter(Boolean) : []
+      );
       setSelectedAmenities(filters.amenities || []);
       setMinRating(filters.minRating || 0);
     }
   }, [isOpen, filters]);
 
   if (!isOpen) return null;
+
+  const togglePlaceType = (pt: string) => {
+    setSelectedPlaceTypes((prev) =>
+      prev.includes(pt) ? prev.filter((item) => item !== pt) : [...prev, pt]
+    );
+  };
 
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities((prev) =>
@@ -87,6 +118,7 @@ export function FilterModal({
       minPrice: minP && minP > 0 ? minP : undefined,
       maxPrice: maxP && maxP > 0 ? maxP : undefined,
       propertyType: propertyType !== 'All' ? propertyType : undefined,
+      placeType: selectedPlaceTypes.length > 0 ? selectedPlaceTypes.join(',') : undefined,
       amenities: selectedAmenities,
       minRating: minRating > 0 ? minRating : undefined,
     });
@@ -97,6 +129,7 @@ export function FilterModal({
     setMinPrice('');
     setMaxPrice('');
     setPropertyType('All');
+    setSelectedPlaceTypes([]);
     setSelectedAmenities([]);
     setMinRating(0);
     onClear();
@@ -108,6 +141,7 @@ export function FilterModal({
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0) +
     (propertyType && propertyType !== 'All' ? 1 : 0) +
+    selectedPlaceTypes.length +
     selectedAmenities.length +
     (minRating > 0 ? 1 : 0);
 
@@ -202,14 +236,14 @@ export function FilterModal({
             </div>
           </div>
 
-          {/* 2. Property Type */}
+          {/* 2. Property Type (All 8 Types) */}
           <div className="pt-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">Property Type</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Filter by the type of space</p>
+              <p className="text-xs text-gray-500 mt-0.5">Filter by the architectural category of the stay</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
               {PROPERTY_TYPES.map((pt) => {
                 const isSelected = propertyType.toLowerCase() === pt.label.toLowerCase();
                 const Icon = pt.icon;
@@ -218,21 +252,65 @@ export function FilterModal({
                     type="button"
                     key={pt.label}
                     onClick={() => setPropertyType(pt.label)}
-                    className={`p-3.5 rounded-2xl border text-sm font-semibold flex flex-col items-center justify-center gap-2 transition-all ${
+                    className={`p-3 rounded-2xl border text-xs sm:text-sm font-semibold flex flex-col items-center justify-center gap-1.5 transition-all ${
                       isSelected
                         ? 'border-gray-900 bg-gray-900 text-white shadow-md'
                         : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {Icon ? <Icon className="w-5 h-5" /> : <span className="text-base font-bold">&infin;</span>}
-                    <span>{pt.label}</span>
+                    {Icon ? <Icon className="w-4 h-4 sm:w-5 sm:h-5" /> : <span className="text-sm font-bold">&infin;</span>}
+                    <span className="truncate">{pt.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* 3. Amenities */}
+          {/* 3. Place Type (4 Canonical Types) */}
+          <div className="pt-6 space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">Type of Place</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Search rooms, entire homes, or shared spaces</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PLACE_TYPES.map((pt) => {
+                const isChecked = selectedPlaceTypes.includes(pt.label);
+                const Icon = pt.icon;
+                return (
+                  <button
+                    type="button"
+                    key={pt.label}
+                    onClick={() => togglePlaceType(pt.label)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 ${
+                      isChecked
+                        ? 'border-gray-900 bg-gray-900 text-white shadow-sm'
+                        : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded flex items-center justify-center border mt-0.5 shrink-0 ${
+                        isChecked ? 'border-white bg-white text-gray-900' : 'border-gray-400'
+                      }`}
+                    >
+                      {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 font-bold text-sm">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{pt.label}</span>
+                      </div>
+                      <p className={`text-xs mt-0.5 ${isChecked ? 'text-gray-300' : 'text-gray-500'}`}>
+                        {pt.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4. Amenities */}
           <div className="pt-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">Amenities</h3>
@@ -267,7 +345,7 @@ export function FilterModal({
             </div>
           </div>
 
-          {/* 4. Minimum Rating */}
+          {/* 5. Minimum Rating */}
           <div className="pt-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">Minimum Rating</h3>

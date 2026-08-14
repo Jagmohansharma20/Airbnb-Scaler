@@ -56,7 +56,10 @@ def init_db():
         description TEXT NOT NULL,
         price_per_night REAL NOT NULL,
         maximum_guests INTEGER NOT NULL,
+        bedrooms INTEGER DEFAULT 1,
+        beds INTEGER DEFAULT 1,
         property_type TEXT NOT NULL,
+        place_type TEXT NOT NULL DEFAULT 'Entire place',
         bathroom_type TEXT NOT NULL,
         is_active INTEGER DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -70,6 +73,29 @@ def init_db():
         cursor.execute("ALTER TABLE listings ADD COLUMN is_active INTEGER DEFAULT 1;")
     except sqlite3.OperationalError:
         pass
+
+    # Try adding place_type column if migrating existing database
+    try:
+        cursor.execute("ALTER TABLE listings ADD COLUMN place_type TEXT DEFAULT 'Entire place';")
+    except sqlite3.OperationalError:
+        pass
+
+    # Try adding bedrooms column if migrating existing database
+    try:
+        cursor.execute("ALTER TABLE listings ADD COLUMN bedrooms INTEGER DEFAULT 1;")
+    except sqlite3.OperationalError:
+        pass
+
+    # Try adding beds column if migrating existing database
+    try:
+        cursor.execute("ALTER TABLE listings ADD COLUMN beds INTEGER DEFAULT 1;")
+    except sqlite3.OperationalError:
+        pass
+
+    # Ensure existing records have valid defaults
+    cursor.execute("UPDATE listings SET place_type = 'Entire place' WHERE place_type IS NULL OR place_type = '';")
+    cursor.execute("UPDATE listings SET bedrooms = 1 WHERE bedrooms IS NULL OR bedrooms < 1;")
+    cursor.execute("UPDATE listings SET beds = 1 WHERE beds IS NULL OR beds < 1;")
 
     # Listing Images table (order 1, 2, 3)
     cursor.execute("""
@@ -120,13 +146,36 @@ def init_db():
         start_date TEXT NOT NULL,
         end_date TEXT NOT NULL,
         guests INTEGER NOT NULL,
+        nights INTEGER DEFAULT 1,
+        price_per_night REAL DEFAULT 0,
+        base_price REAL DEFAULT 0,
+        additional_charges REAL DEFAULT 0,
+        discount REAL DEFAULT 0,
         total_price REAL NOT NULL,
+        guest_message TEXT,
         status TEXT NOT NULL DEFAULT 'confirmed',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     """)
+
+    # Safe migrations for bookings table
+    for col_def in [
+        ("nights", "INTEGER DEFAULT 1"),
+        ("price_per_night", "REAL DEFAULT 0"),
+        ("base_price", "REAL DEFAULT 0"),
+        ("additional_charges", "REAL DEFAULT 0"),
+        ("discount", "REAL DEFAULT 0"),
+        ("guest_message", "TEXT")
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE bookings ADD COLUMN {col_def[0]} {col_def[1]};")
+        except sqlite3.OperationalError:
+            pass
+
+    # Ensure existing records have valid defaults
+    cursor.execute("UPDATE bookings SET nights = 1 WHERE nights IS NULL OR nights < 1;")
 
     # Favourites table
     cursor.execute("""

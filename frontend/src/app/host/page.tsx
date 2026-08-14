@@ -156,9 +156,9 @@ function HostDashboardContent() {
                   className="w-full h-full object-cover"
                 />
                 
-                {/* Property Type Badge */}
+                {/* Property Type & Place Type Badge */}
                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm">
-                  {listing.property_type}
+                  {listing.property_type}{listing.place_type ? ` · ${listing.place_type}` : ''}
                 </div>
 
                 {/* Rating Badge */}

@@ -35,7 +35,7 @@ function LoginForm() {
   return (
     <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-8">
-        
+
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-50 text-[#FF385C] mb-2">
@@ -59,10 +59,10 @@ function LoginForm() {
         )}
 
         {/* Demo Credentials Helper */}
-        <div className="bg-gray-50 border border-gray-200 p-3.5 rounded-2xl text-xs text-gray-600 space-y-1">
+        {/* <div className="bg-gray-50 border border-gray-200 p-3.5 rounded-2xl text-xs text-gray-600 space-y-1">
           <p className="font-semibold text-gray-800">Quick Test Credentials:</p>
           <p>Email: <span className="font-mono text-gray-900">balaji@airbnb.com</span> | Password: <span className="font-mono text-gray-900">password123</span></p>
-        </div>
+        </div> */}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

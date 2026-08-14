@@ -69,17 +69,33 @@ def create_booking(
             detail="This home is not available for the selected dates. Please choose different dates."
         )
 
-    # 5. Server-side price calculation
-    nights = (d_end - d_start).days
-    base_price = nights * float(listing["price_per_night"])
-    service_fee = 1500.0  # standard service fee
-    total_price = base_price + service_fee
+    # 5. Server-side price calculation (Integer precision: Section 10-17)
+    nights = max(1, (d_end - d_start).days)
+    nightly_rate = int(round(float(listing["price_per_night"])))
+    base_price = nights * nightly_rate
+    additional_charges = int(round(base_price * 0.20))
+    discount = int(round(base_price * 0.07))
+    total_price = base_price + additional_charges - discount
+
+    sanitized_message = (
+        data.guest_message.strip()[:500]
+        if data.guest_message and data.guest_message.strip()
+        else None
+    )
 
     # 6. Insert booking
     cursor.execute("""
-        INSERT INTO bookings (listing_id, user_id, start_date, end_date, guests, total_price, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'confirmed')
-    """, (data.listing_id, current_user["id"], data.start_date, data.end_date, data.guests, total_price))
+        INSERT INTO bookings (
+            listing_id, user_id, start_date, end_date, guests,
+            nights, price_per_night, base_price, additional_charges, discount, total_price,
+            guest_message, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')
+    """, (
+        data.listing_id, current_user["id"], data.start_date, data.end_date, data.guests,
+        nights, nightly_rate, base_price, additional_charges, discount, total_price,
+        sanitized_message
+    ))
     booking_id = cursor.lastrowid
     db.commit()
 
@@ -97,7 +113,13 @@ def create_booking(
         "start_date": booking["start_date"],
         "end_date": booking["end_date"],
         "guests": booking["guests"],
+        "nights": booking["nights"] if "nights" in booking.keys() else nights,
+        "price_per_night": booking["price_per_night"] if "price_per_night" in booking.keys() else nightly_rate,
+        "base_price": booking["base_price"] if "base_price" in booking.keys() else base_price,
+        "additional_charges": booking["additional_charges"] if "additional_charges" in booking.keys() else additional_charges,
+        "discount": booking["discount"] if "discount" in booking.keys() else discount,
         "total_price": booking["total_price"],
+        "guest_message": booking["guest_message"] if "guest_message" in booking.keys() else sanitized_message,
         "status": booking["status"],
         "created_at": str(booking["created_at"]),
         "host_name": listing["host_name"],
@@ -113,7 +135,13 @@ def get_my_bookings(
     cursor.execute("""
         SELECT 
             b.id, b.listing_id, b.user_id, b.start_date, b.end_date,
-            b.guests, b.total_price, b.status, b.created_at,
+            b.guests,
+            COALESCE(b.nights, 1) AS nights,
+            COALESCE(b.price_per_night, l.price_per_night) AS price_per_night,
+            COALESCE(b.base_price, b.total_price) AS base_price,
+            COALESCE(b.additional_charges, 0) AS additional_charges,
+            COALESCE(b.discount, 0) AS discount,
+            b.total_price, b.guest_message, b.status, b.created_at,
             l.house_name, l.location, l.state,
             u.name AS host_name, u.phone AS host_phone,
             COALESCE(
@@ -141,7 +169,13 @@ def get_my_bookings(
             "start_date": r["start_date"],
             "end_date": r["end_date"],
             "guests": r["guests"],
+            "nights": r["nights"] if "nights" in r.keys() else 1,
+            "price_per_night": r["price_per_night"] if "price_per_night" in r.keys() else None,
+            "base_price": r["base_price"] if "base_price" in r.keys() else None,
+            "additional_charges": r["additional_charges"] if "additional_charges" in r.keys() else 0,
+            "discount": r["discount"] if "discount" in r.keys() else 0,
             "total_price": r["total_price"],
+            "guest_message": r["guest_message"] if "guest_message" in r.keys() else None,
             "status": r["status"],
             "created_at": str(r["created_at"]),
             "host_name": r["host_name"],

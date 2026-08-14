@@ -52,6 +52,9 @@ class ListingImageOut(BaseModel):
     image_url: str
     image_order: int
 
+PROPERTY_TYPE_PATTERN = "^(House|Apartment|Villa|Hotel|Cottage|Cabin|Guesthouse|Resort)$"
+PLACE_TYPE_PATTERN = "^(Entire place|Private room|Hotel room|Shared room)$"
+
 class ListingCreate(BaseModel):
     house_name: str = Field(..., min_length=3, max_length=200)
     street: str = Field(..., min_length=2)
@@ -60,7 +63,10 @@ class ListingCreate(BaseModel):
     description: str = Field(..., min_length=10)
     price_per_night: float = Field(..., gt=0)
     maximum_guests: int = Field(..., ge=1, le=50)
-    property_type: str = Field(..., pattern="^(House|Apartment|Hotel)$")
+    bedrooms: int = Field(default=1, ge=1)
+    beds: int = Field(default=1, ge=1)
+    property_type: str = Field(..., pattern=PROPERTY_TYPE_PATTERN)
+    place_type: str = Field(default="Entire place", pattern=PLACE_TYPE_PATTERN)
     bathroom_type: str = Field(..., pattern="^(Attached|Not Attached)$")
     phone: Optional[str] = None
     images: List[str] = Field(..., min_length=3, max_length=3)
@@ -75,7 +81,10 @@ class ListingUpdate(BaseModel):
     description: Optional[str] = None
     price_per_night: Optional[float] = Field(None, gt=0)
     maximum_guests: Optional[int] = Field(None, ge=1, le=50)
-    property_type: Optional[str] = Field(None, pattern="^(House|Apartment|Hotel)$")
+    bedrooms: Optional[int] = Field(None, ge=1)
+    beds: Optional[int] = Field(None, ge=1)
+    property_type: Optional[str] = Field(None, pattern=PROPERTY_TYPE_PATTERN)
+    place_type: Optional[str] = Field(None, pattern=PLACE_TYPE_PATTERN)
     bathroom_type: Optional[str] = Field(None, pattern="^(Attached|Not Attached)$")
     phone: Optional[str] = None
     images: Optional[List[str]] = Field(None, min_length=3, max_length=3)
@@ -101,13 +110,30 @@ class ListingSummaryOut(BaseModel):
     state: str
     price_per_night: float
     maximum_guests: int
+    bedrooms: int = 1
+    beds: int = 1
     property_type: str
+    place_type: str = "Entire place"
     bathroom_type: str
     image_url: str  # First image
     rating: Optional[float] = None
     review_count: int = 0
     is_favourite: bool = False
     is_active: bool = True
+
+class PaginationMeta(BaseModel):
+    page: int
+    limit: int
+    total: int
+    total_pages: int
+
+class PaginatedListingsOut(BaseModel):
+    listings: List[ListingSummaryOut]
+    pagination: PaginationMeta
+    page: int
+    limit: int
+    total: int
+    total_pages: int
 
 class ListingDetailOut(BaseModel):
     id: int
@@ -120,7 +146,10 @@ class ListingDetailOut(BaseModel):
     description: str
     price_per_night: float
     maximum_guests: int
+    bedrooms: int = 1
+    beds: int = 1
     property_type: str
+    place_type: str = "Entire place"
     bathroom_type: str
     images: List[str]
     amenities: List[str]
@@ -139,6 +168,7 @@ class BookingCreate(BaseModel):
     start_date: str  # YYYY-MM-DD
     end_date: str    # YYYY-MM-DD
     guests: int = Field(..., ge=1)
+    guest_message: Optional[str] = Field(None, max_length=500)
 
 class BookingOut(BaseModel):
     id: int
@@ -151,7 +181,13 @@ class BookingOut(BaseModel):
     start_date: str
     end_date: str
     guests: int
+    nights: Optional[int] = None
+    price_per_night: Optional[float] = None
+    base_price: Optional[float] = None
+    additional_charges: Optional[float] = None
+    discount: Optional[float] = None
     total_price: float
+    guest_message: Optional[str] = None
     status: str
     created_at: str
     host_name: Optional[str] = None
@@ -171,7 +207,13 @@ class HostBookingOut(BaseModel):
     start_date: str
     end_date: str
     guests: int
+    nights: Optional[int] = None
+    price_per_night: Optional[float] = None
+    base_price: Optional[float] = None
+    additional_charges: Optional[float] = None
+    discount: Optional[float] = None
     total_price: float
+    guest_message: Optional[str] = None
     status: str
     is_active: bool = True
     created_at: str

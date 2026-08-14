@@ -167,8 +167,8 @@ function HostBookingsContent() {
                     </div>
                   </div>
 
-                  {/* Dates & Guests */}
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700 pt-1">
+                  {/* Dates, Guests & Nights */}
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm text-gray-700 pt-1">
                     <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
                       <Calendar className="w-4 h-4 text-[#FF385C]" />
                       <span className="font-semibold">{b.start_date}</span>
@@ -180,6 +180,16 @@ function HostBookingsContent() {
                       <Users className="w-4 h-4 text-[#FF385C]" />
                       <span className="font-medium">{b.guests} {b.guests === 1 ? 'Guest' : 'Guests'}</span>
                     </div>
+
+                    <div className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200 font-medium text-gray-700">
+                      {b.nights || 1} {b.nights === 1 ? 'Night' : 'Nights'}
+                    </div>
+
+                    {b.price_per_night && (
+                      <div className="text-xs text-gray-500 hidden sm:block">
+                        &#8377;{Math.round(b.price_per_night).toLocaleString()} / night
+                      </div>
+                    )}
                   </div>
 
                   {/* Guest Contact Details Card (Section 14 & 15) */}
@@ -200,6 +210,22 @@ function HostBookingsContent() {
                         <span>{b.guest_phone}</span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Feature 4 & 7: Guest Message Display (Section 23, 24, 37) */}
+                  <div className="p-3.5 rounded-2xl border bg-rose-50/40 border-rose-100/80 space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                      <span>Message from guest:</span>
+                    </p>
+                    <p className={`text-xs ${
+                      b.guest_message && b.guest_message.trim() 
+                        ? 'text-gray-800 font-medium' 
+                        : 'text-gray-400 italic'
+                    }`}>
+                      {b.guest_message && b.guest_message.trim() 
+                        ? `"${b.guest_message.trim()}"` 
+                        : 'No message provided'}
+                    </p>
                   </div>
                 </div>
 

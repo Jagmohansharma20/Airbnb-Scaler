@@ -1,3 +1,3 @@
 @echo off
-cd frontend
-npm run dev -- -p 3000
+cd /d "%~dp0frontend"
+npm run dev

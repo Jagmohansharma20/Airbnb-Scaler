@@ -1,4 +1,5 @@
 import sqlite3
+import math
 from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -6,73 +7,74 @@ from database import get_db
 from auth import get_current_user, get_optional_current_user
 from schemas import (
     ListingSummaryOut, ListingDetailOut, ListingCreate, ListingUpdate,
-    HostInfo, BookedDateRange, ReviewOut
+    HostInfo, BookedDateRange, ReviewOut, PaginatedListingsOut
 )
 
 router = APIRouter(prefix="/listings", tags=["listings"])
 
-@router.get("", response_model=List[ListingSummaryOut])
+@router.get("", response_model=PaginatedListingsOut)
 def get_listings(
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
     location: Optional[str] = Query(None, description="Location partial search"),
     start_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
     guests: Optional[int] = Query(None, ge=1, description="Number of guests"),
     min_price: Optional[float] = Query(None, ge=0, description="Minimum price per night"),
     max_price: Optional[float] = Query(None, ge=0, description="Maximum price per night"),
-    property_type: Optional[str] = Query(None, description="Property type filter"),
+    property_type: Optional[str] = Query(None, description="Property type filter (single or comma-separated)"),
+    place_type: Optional[str] = Query(None, description="Place type filter (single or comma-separated)"),
     amenities: Optional[str] = Query(None, description="Comma-separated amenities (e.g. WiFi,AC)"),
     min_rating: Optional[float] = Query(None, ge=0, le=5, description="Minimum average rating"),
     current_user: Optional[dict] = Depends(get_optional_current_user),
     db: sqlite3.Connection = Depends(get_db)
 ):
     cursor = db.cursor()
-    query = """
-        SELECT 
-            l.id, l.host_id, l.house_name, l.street, l.location, l.state,
-            l.price_per_night, l.maximum_guests, l.property_type, l.bathroom_type,
-            COALESCE(l.is_active, 1) AS is_active,
-            COALESCE(
-                (SELECT image_url FROM listing_images WHERE listing_id = l.id AND image_order = 1 LIMIT 1),
-                (SELECT image_url FROM listing_images WHERE listing_id = l.id ORDER BY id ASC LIMIT 1),
-                ''
-            ) AS image_url,
-            (SELECT AVG(rating) FROM reviews WHERE listing_id = l.id) AS avg_rating,
-            (SELECT COUNT(*) FROM reviews WHERE listing_id = l.id) AS review_count
-        FROM listings l
-        WHERE COALESCE(l.is_active, 1) = 1
-    """
+    
+    where_clause = "WHERE COALESCE(l.is_active, 1) = 1"
     params = []
 
     # 1. Location partial search (case-insensitive)
     if location and location.strip():
         loc_term = f"%{location.strip().lower()}%"
-        query += " AND (LOWER(l.location) LIKE ? OR LOWER(l.state) LIKE ? OR LOWER(l.house_name) LIKE ? OR LOWER(l.street) LIKE ?)"
+        where_clause += " AND (LOWER(l.location) LIKE ? OR LOWER(l.state) LIKE ? OR LOWER(l.house_name) LIKE ? OR LOWER(l.street) LIKE ?)"
         params.extend([loc_term, loc_term, loc_term, loc_term])
 
     # 2. Guest capacity filter
     if guests and guests > 0:
-        query += " AND l.maximum_guests >= ?"
+        where_clause += " AND l.maximum_guests >= ?"
         params.append(guests)
 
     # 3. Price range filters
     if min_price is not None and min_price > 0:
-        query += " AND l.price_per_night >= ?"
+        where_clause += " AND l.price_per_night >= ?"
         params.append(min_price)
     if max_price is not None and max_price > 0:
-        query += " AND l.price_per_night <= ?"
+        where_clause += " AND l.price_per_night <= ?"
         params.append(max_price)
 
-    # 4. Property type filter
+    # 4. Property type filter (single or comma-separated multi-select)
     if property_type and property_type.strip() and property_type.strip().lower() != 'all':
-        query += " AND LOWER(l.property_type) = LOWER(?)"
-        params.append(property_type.strip())
+        pt_list = [p.strip().lower() for p in property_type.split(',') if p.strip() and p.strip().lower() != 'all']
+        if pt_list:
+            placeholders = ', '.join(['?'] * len(pt_list))
+            where_clause += f" AND LOWER(l.property_type) IN ({placeholders})"
+            params.extend(pt_list)
 
-    # 5. Amenities multi-match filter (listing must satisfy all selected amenities)
+    # 5. Place type filter (single or comma-separated multi-select)
+    if place_type and place_type.strip() and place_type.strip().lower() != 'all':
+        plt_list = [p.strip().lower() for p in place_type.split(',') if p.strip() and p.strip().lower() != 'all']
+        if plt_list:
+            placeholders = ', '.join(['?'] * len(plt_list))
+            where_clause += f" AND LOWER(COALESCE(l.place_type, 'Entire place')) IN ({placeholders})"
+            params.extend(plt_list)
+
+    # 6. Amenities multi-match filter (listing must satisfy all selected amenities)
     if amenities and amenities.strip():
         am_list = [a.strip().lower() for a in amenities.split(',') if a.strip()]
         if am_list:
             placeholders = ', '.join(['?'] * len(am_list))
-            query += f"""
+            where_clause += f"""
                 AND (
                     SELECT COUNT(DISTINCT LOWER(a.name))
                     FROM listing_amenities la
@@ -84,12 +86,12 @@ def get_listings(
             params.extend(am_list)
             params.append(len(am_list))
 
-    # 6. Minimum Rating filter
+    # 7. Minimum Rating filter
     if min_rating is not None and min_rating > 0:
-        query += " AND (SELECT AVG(rating) FROM reviews WHERE listing_id = l.id) >= ?"
+        where_clause += " AND (SELECT AVG(rating) FROM reviews WHERE listing_id = l.id) >= ?"
         params.append(min_rating)
 
-    # 7. Booking date overlap filtering
+    # 8. Booking date overlap filtering
     if start_date and end_date:
         try:
             d_start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -97,7 +99,7 @@ def get_listings(
             if d_end > d_start:
                 # Exclude any listing that has an overlapping confirmed booking
                 # Overlap condition: booking.start_date < requested_end AND booking.end_date > requested_start
-                query += """
+                where_clause += """
                     AND l.id NOT IN (
                         SELECT b.listing_id 
                         FROM bookings b 
@@ -110,8 +112,40 @@ def get_listings(
         except ValueError:
             pass  # Invalid date format ignored for query or handled
 
-    query += " ORDER BY l.id DESC"
-    cursor.execute(query, params)
+    # First, calculate total matching listings before pagination
+    count_query = f"SELECT COUNT(*) AS total_count FROM listings l {where_clause}"
+    cursor.execute(count_query, params)
+    total_row = cursor.fetchone()
+    total = total_row["total_count"] if total_row else 0
+    total_pages = max(1, math.ceil(total / limit)) if total > 0 else 0
+
+    # Calculate SQLite offset
+    offset = (page - 1) * limit
+
+    # Query the paginated subset
+    data_query = f"""
+        SELECT 
+            l.id, l.host_id, l.house_name, l.street, l.location, l.state,
+            l.price_per_night, l.maximum_guests,
+            COALESCE(l.bedrooms, 1) AS bedrooms,
+            COALESCE(l.beds, 1) AS beds,
+            l.property_type,
+            COALESCE(l.place_type, 'Entire place') AS place_type,
+            l.bathroom_type,
+            COALESCE(l.is_active, 1) AS is_active,
+            COALESCE(
+                (SELECT image_url FROM listing_images WHERE listing_id = l.id AND image_order = 1 LIMIT 1),
+                (SELECT image_url FROM listing_images WHERE listing_id = l.id ORDER BY id ASC LIMIT 1),
+                ''
+            ) AS image_url,
+            (SELECT AVG(rating) FROM reviews WHERE listing_id = l.id) AS avg_rating,
+            (SELECT COUNT(*) FROM reviews WHERE listing_id = l.id) AS review_count
+        FROM listings l
+        {where_clause}
+        ORDER BY l.id DESC
+        LIMIT ? OFFSET ?
+    """
+    cursor.execute(data_query, params + [limit, offset])
     rows = cursor.fetchall()
 
     # Check user favourites if authenticated
@@ -132,7 +166,10 @@ def get_listings(
             "state": r["state"],
             "price_per_night": r["price_per_night"],
             "maximum_guests": r["maximum_guests"],
+            "bedrooms": r["bedrooms"] if "bedrooms" in r.keys() else 1,
+            "beds": r["beds"] if "beds" in r.keys() else 1,
             "property_type": r["property_type"],
+            "place_type": r["place_type"] if "place_type" in r.keys() else "Entire place",
             "bathroom_type": r["bathroom_type"],
             "image_url": r["image_url"],
             "rating": rating_val,
@@ -141,7 +178,21 @@ def get_listings(
             "is_active": bool(r["is_active"])
         })
 
-    return results
+    pagination_data = {
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "total_pages": total_pages
+    }
+
+    return {
+        "listings": results,
+        "pagination": pagination_data,
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "total_pages": total_pages
+    }
 
 @router.get("/{id}", response_model=ListingDetailOut)
 def get_listing_detail(
@@ -153,7 +204,11 @@ def get_listing_detail(
     cursor.execute("""
         SELECT 
             l.id, l.host_id, l.house_name, l.street, l.location, l.state,
-            l.description, l.price_per_night, l.maximum_guests, l.property_type,
+            l.description, l.price_per_night, l.maximum_guests,
+            COALESCE(l.bedrooms, 1) AS bedrooms,
+            COALESCE(l.beds, 1) AS beds,
+            l.property_type,
+            COALESCE(l.place_type, 'Entire place') AS place_type,
             l.bathroom_type, COALESCE(l.is_active, 1) AS is_active, l.created_at,
             u.name AS host_name, u.email AS host_email, u.phone AS host_phone
         FROM listings l
@@ -243,7 +298,10 @@ def get_listing_detail(
         "description": listing["description"],
         "price_per_night": listing["price_per_night"],
         "maximum_guests": listing["maximum_guests"],
+        "bedrooms": listing["bedrooms"] if "bedrooms" in listing.keys() else 1,
+        "beds": listing["beds"] if "beds" in listing.keys() else 1,
         "property_type": listing["property_type"],
+        "place_type": listing["place_type"] if "place_type" in listing.keys() else "Entire place",
         "bathroom_type": listing["bathroom_type"],
         "images": images,
         "amenities": amenities,
@@ -272,12 +330,13 @@ def create_listing(
     cursor.execute("""
         INSERT INTO listings (
             host_id, house_name, street, location, state, description,
-            price_per_night, maximum_guests, property_type, bathroom_type, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            price_per_night, maximum_guests, bedrooms, beds, property_type, place_type, bathroom_type, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
     """, (
         current_user["id"], data.house_name.strip(), data.street.strip(),
         data.location.strip(), data.state.strip(), data.description.strip(),
-        data.price_per_night, data.maximum_guests, data.property_type, data.bathroom_type
+        data.price_per_night, data.maximum_guests, data.bedrooms, data.beds,
+        data.property_type, data.place_type, data.bathroom_type
     ))
     listing_id = cursor.lastrowid
 
@@ -341,7 +400,10 @@ def update_listing(
         ("description", data.description),
         ("price_per_night", data.price_per_night),
         ("maximum_guests", data.maximum_guests),
+        ("bedrooms", data.bedrooms),
+        ("beds", data.beds),
         ("property_type", data.property_type),
+        ("place_type", data.place_type),
         ("bathroom_type", data.bathroom_type)
     ]:
         if val is not None:

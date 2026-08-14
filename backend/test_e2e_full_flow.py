@@ -78,7 +78,8 @@ def run_e2e():
         "description": "Private infinity pool villa steps from the Arabian Sea.",
         "price_per_night": 7500.0,
         "maximum_guests": 6,
-        "property_type": "House",
+        "property_type": "Villa",
+        "place_type": "Entire place",
         "bathroom_type": "Attached",
         "images": [
             "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
@@ -167,7 +168,8 @@ def run_e2e():
     print(f"  [PASS] Rahul unlisted Goa Villa successfully")
 
     # Verify unlisted property no longer appears in public search / listings
-    status, public_listings = make_req(f"{BACKEND_URL}/listings")
+    status, public_res = make_req(f"{BACKEND_URL}/listings?limit=50")
+    public_listings = public_res["listings"] if isinstance(public_res, dict) else public_res
     assert not any(l["id"] == goa_villa_id for l in public_listings), "Unlisted property must NOT appear in public listings"
     print(f"  [PASS] Unlisted Goa Villa disappeared from public search")
 

@@ -48,11 +48,11 @@ def seed_database():
         cursor.execute("SELECT id FROM amenities WHERE name = ?", (a,))
         amenity_id_map[a] = cursor.fetchone()["id"]
 
-    # 3. Seed 10 Listings with 3 images each, amenities, uniqueness, and host
+    # 3. Seed Listings with 3 images each, amenities, uniqueness, property_type, and place_type
     listings_data = [
         {
             "host_id": 1,
-            "house_name": "The Heritage Havelock Villa",
+            "house_name": "The Heritage Havelock House",
             "street": "14 Shanti Path, Chanakyapuri",
             "location": "Delhi",
             "state": "Delhi",
@@ -60,6 +60,7 @@ def seed_database():
             "price_per_night": 5200.0,
             "maximum_guests": 6,
             "property_type": "House",
+            "place_type": "Entire place",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80",
@@ -78,7 +79,8 @@ def seed_database():
             "description": "Direct beachfront villa with an infinity plunge pool overlooking the Arabian Sea. Enjoy golden sunsets from your private sundeck, outdoor barbecue pit, and floor-to-ceiling glass doors.",
             "price_per_night": 8500.0,
             "maximum_guests": 8,
-            "property_type": "House",
+            "property_type": "Villa",
+            "place_type": "Entire place",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80",
@@ -98,6 +100,7 @@ def seed_database():
             "price_per_night": 7200.0,
             "maximum_guests": 4,
             "property_type": "Apartment",
+            "place_type": "Entire place",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
@@ -116,7 +119,8 @@ def seed_database():
             "description": "A cozy hand-hewn cedar chalet tucked amid pine forests and snow-capped peaks. Cozy up by the stone fireplace, sip hot spiced chai on the balcony, or stargaze from the attic window.",
             "price_per_night": 3800.0,
             "maximum_guests": 4,
-            "property_type": "House",
+            "property_type": "Cabin",
+            "place_type": "Private room",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
@@ -136,6 +140,7 @@ def seed_database():
             "price_per_night": 6400.0,
             "maximum_guests": 5,
             "property_type": "Hotel",
+            "place_type": "Hotel room",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
@@ -155,6 +160,7 @@ def seed_database():
             "price_per_night": 4900.0,
             "maximum_guests": 6,
             "property_type": "House",
+            "place_type": "Entire place",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1602002418082-a4443e081dd1?auto=format&fit=crop&w=1200&q=80",
@@ -174,6 +180,7 @@ def seed_database():
             "price_per_night": 3200.0,
             "maximum_guests": 2,
             "property_type": "Apartment",
+            "place_type": "Private room",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1502005229762-ee1b2b814660?auto=format&fit=crop&w=1200&q=80",
@@ -185,14 +192,15 @@ def seed_database():
         },
         {
             "host_id": 4,
-            "house_name": "Lake Pichola Sunset Pavilion",
+            "house_name": "Lake Pichola Sunset Luxury Resort",
             "street": "Lal Ghat, Lake Road",
             "location": "Udaipur",
             "state": "Rajasthan",
-            "description": "Mesmerizing lake-facing property with an arched rooftop gazebo. Watch shimmering waters, historic fortresses, and evening candlelit aartis from your private terrace.",
+            "description": "Mesmerizing lake-facing luxury resort with an arched rooftop gazebo. Watch shimmering waters, historic fortresses, and evening candlelit aartis from your private terrace.",
             "price_per_night": 5800.0,
             "maximum_guests": 4,
-            "property_type": "Hotel",
+            "property_type": "Resort",
+            "place_type": "Hotel room",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80",
@@ -211,7 +219,8 @@ def seed_database():
             "description": "Surround yourself with rolling emerald tea gardens and mist-draped hills. Fresh mountain breeze, guided tea picking tours, open-air campfire area, and homemade south-Indian breakfast.",
             "price_per_night": 3500.0,
             "maximum_guests": 5,
-            "property_type": "House",
+            "property_type": "Cottage",
+            "place_type": "Entire place",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=1200&q=80",
@@ -223,6 +232,26 @@ def seed_database():
         },
         {
             "host_id": 2,
+            "house_name": "Ganga Bliss Eco Guesthouse",
+            "street": "Tapovan, Badrinath Road",
+            "location": "Rishikesh",
+            "state": "Uttarakhand",
+            "description": "Peaceful riverbank guesthouse nestled right next to yoga ashrams and sacred ghats. Rooftop meditation hall, fresh vegan meals, and vibrant traveler community.",
+            "price_per_night": 2200.0,
+            "maximum_guests": 4,
+            "property_type": "Guesthouse",
+            "place_type": "Shared room",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "Kitchen", "Free Parking", "AC"],
+            "uniqueness": ["Nature Retreat", "Peaceful", "Central Location"]
+        },
+        {
+            "host_id": 2,
             "house_name": "Contemporary Designer Studio in South Delhi",
             "street": "Hauz Khas Village",
             "location": "Delhi",
@@ -231,6 +260,7 @@ def seed_database():
             "price_per_night": 4100.0,
             "maximum_guests": 3,
             "property_type": "Apartment",
+            "place_type": "Private room",
             "bathroom_type": "Attached",
             "images": [
                 "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
@@ -239,17 +269,302 @@ def seed_database():
             ],
             "amenities": ["WiFi", "AC", "Kitchen", "TV", "Washing Machine"],
             "uniqueness": ["Central Location", "Scenic View", "Cozy"]
+        },
+        {
+            "host_id": 1,
+            "house_name": "Goa Beachfront Sunset Villa",
+            "street": "Vagator Cliff View Road",
+            "location": "Goa",
+            "state": "Goa",
+            "description": "Spectacular cliffside villa overlooking Vagator beach with private infinity plunge pool and sunset terrace.",
+            "price_per_night": 7000.0,
+            "maximum_guests": 6,
+            "property_type": "Villa",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Free Parking", "TV"],
+            "uniqueness": ["Scenic View", "Luxury", "Peaceful"]
+        },
+        {
+            "host_id": 3,
+            "house_name": "Ooty Heritage Pine Forest Bungalow",
+            "street": "Dodabetta Peak Road",
+            "location": "Ooty",
+            "state": "Tamil Nadu",
+            "description": "Nestled amid towering blue gum trees and eucalyptus groves. Colonial wooden fireplace, expansive flower garden, and fresh mountain vistas.",
+            "price_per_night": 4600.0,
+            "maximum_guests": 6,
+            "property_type": "Cottage",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "Kitchen", "Free Parking", "Fridge", "TV"],
+            "uniqueness": ["Nature Retreat", "Scenic View", "Peaceful"]
+        },
+        {
+            "host_id": 4,
+            "house_name": "French Quarter Heritage Villa",
+            "street": "Rue Romain Rolland, White Town",
+            "location": "Pondicherry",
+            "state": "Puducherry",
+            "description": "Charming Franco-Tamil heritage home with a tranquil inner courtyard, high yellow walls, terracotta tiles, and bougainvillea archways.",
+            "price_per_night": 5100.0,
+            "maximum_guests": 5,
+            "property_type": "Villa",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Free Parking", "TV"],
+            "uniqueness": ["Central Location", "Peaceful", "Luxury"]
+        },
+        {
+            "host_id": 1,
+            "house_name": "Shimla Snow Peak Swiss Chalet",
+            "street": "Jakhoo Hill Crest",
+            "location": "Shimla",
+            "state": "Himachal Pradesh",
+            "description": "Authentic pine-and-stone alpine chalet offering breathtaking views of the Shivalik range. Features warm wooden interiors and a private observation deck.",
+            "price_per_night": 4200.0,
+            "maximum_guests": 4,
+            "property_type": "Cabin",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "Kitchen", "Free Parking", "TV"],
+            "uniqueness": ["Scenic View", "Cozy", "Nature Retreat"]
+        },
+        {
+            "host_id": 2,
+            "house_name": "Kochi Fort Colonial Garden Manor",
+            "street": "Princess Street, Fort Kochi",
+            "location": "Kochi",
+            "state": "Kerala",
+            "description": "Step into history with this Portuguese-influenced manor steps from the Chinese fishing nets, spice markets, and art cafes.",
+            "price_per_night": 3900.0,
+            "maximum_guests": 4,
+            "property_type": "House",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1602002418082-a4443e081dd1?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "TV", "Free Parking"],
+            "uniqueness": ["Central Location", "Peaceful"]
+        },
+        {
+            "host_id": 3,
+            "house_name": "Goa Tropical Palms Eco Resort",
+            "street": "Anjuna Flea Market Road",
+            "location": "Goa",
+            "state": "Goa",
+            "description": "Boho-chic luxury cottage retreat with private garden jacuzzi, outdoor open-air shower, and breezy palm thatch balconies.",
+            "price_per_night": 5400.0,
+            "maximum_guests": 4,
+            "property_type": "Resort",
+            "place_type": "Hotel room",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Free Parking", "Gym", "Fridge"],
+            "uniqueness": ["Luxury", "Peaceful", "Scenic View"]
+        },
+        {
+            "host_id": 4,
+            "house_name": "Koramangala Modern Tech Residency",
+            "street": "80ft Road, 4th Block",
+            "location": "Bangalore",
+            "state": "Karnataka",
+            "description": "Executive smart home designed for business travelers and digital nomads. Dual monitors, standing desk, soundproofing, and fitness hub.",
+            "price_per_night": 3400.0,
+            "maximum_guests": 3,
+            "property_type": "Apartment",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Gym", "Washing Machine", "TV"],
+            "uniqueness": ["Central Location", "Cozy"]
+        },
+        {
+            "host_id": 1,
+            "house_name": "Jaipur Peacock Courtyard Haveli",
+            "street": "Amer Fort Road",
+            "location": "Jaipur",
+            "state": "Rajasthan",
+            "description": "Restored 19th-century haveli with frescoed walls, traditional jali windows, and a fountain courtyard where peacocks visit each dawn.",
+            "price_per_night": 5900.0,
+            "maximum_guests": 6,
+            "property_type": "House",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Free Parking", "TV"],
+            "uniqueness": ["Luxury", "Family Friendly", "Scenic View"]
+        },
+        {
+            "host_id": 2,
+            "house_name": "Juhu Beach Sunrise Penthouse",
+            "street": "Juhu Tara Road",
+            "location": "Mumbai",
+            "state": "Maharashtra",
+            "description": "Exclusive beachfront penthouse with uninterrupted sea views, private rooftop bar, and direct access to Mumbai's lively coast.",
+            "price_per_night": 8800.0,
+            "maximum_guests": 6,
+            "property_type": "Apartment",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Gym", "Washing Machine", "TV"],
+            "uniqueness": ["Scenic View", "Luxury", "Central Location"]
+        },
+        {
+            "host_id": 3,
+            "house_name": "Kasol Riverside Alpine Cabin",
+            "street": "Parvati Valley Path",
+            "location": "Kasol",
+            "state": "Himachal Pradesh",
+            "description": "Handcrafted log cabin perched directly over the gushing Parvati river with a glass floor sunroom and cedar sauna.",
+            "price_per_night": 3100.0,
+            "maximum_guests": 4,
+            "property_type": "Cabin",
+            "place_type": "Private room",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "Kitchen", "Free Parking", "Fridge"],
+            "uniqueness": ["Nature Retreat", "Scenic View", "Cozy"]
+        },
+        {
+            "host_id": 4,
+            "house_name": "Udaipur Aravali Hills Boutique Hotel",
+            "street": "Tiger Hill Pass",
+            "location": "Udaipur",
+            "state": "Rajasthan",
+            "description": "Boutique hillside hotel with an infinity pool facing the Aravali mountain sunsets and private rooftop dining gazebos.",
+            "price_per_night": 6200.0,
+            "maximum_guests": 4,
+            "property_type": "Hotel",
+            "place_type": "Hotel room",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Free Parking", "Gym", "TV", "Fridge"],
+            "uniqueness": ["Scenic View", "Luxury", "Peaceful"]
+        },
+        {
+            "host_id": 1,
+            "house_name": "Vagator Bohemian Garden Cottage",
+            "street": "Ozran Beach Lane",
+            "location": "Goa",
+            "state": "Goa",
+            "description": "Enchanting garden cottage surrounded by coconut trees, natural swimming pond, and outdoor hammocks just 5 minutes from Little Vagator.",
+            "price_per_night": 4500.0,
+            "maximum_guests": 4,
+            "property_type": "Cottage",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Free Parking", "Fridge"],
+            "uniqueness": ["Nature Retreat", "Peaceful", "Cozy"]
+        },
+        {
+            "host_id": 2,
+            "house_name": "Cyber City Luxury Suite",
+            "street": "DLF Phase 2, Golf Course Road",
+            "location": "Delhi",
+            "state": "Delhi",
+            "description": "Ultra-sleek corporate apartment in NCR with floor-to-ceiling windows, smart home automation, and luxury clubhouse access.",
+            "price_per_night": 4800.0,
+            "maximum_guests": 3,
+            "property_type": "Apartment",
+            "place_type": "Entire place",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Kitchen", "Gym", "Washing Machine", "TV"],
+            "uniqueness": ["Central Location", "Luxury"]
+        },
+        {
+            "host_id": 3,
+            "house_name": "Rishikesh Himalayan Serenity Resort",
+            "street": "Neelkanth Temple Road",
+            "location": "Rishikesh",
+            "state": "Uttarakhand",
+            "description": "Luxurious hill resort overlooking the emerald waters of the Ganges. Includes private yoga pavilion, Ayurvedic spa treatments, and organic cafe.",
+            "price_per_night": 6500.0,
+            "maximum_guests": 5,
+            "property_type": "Resort",
+            "place_type": "Hotel room",
+            "bathroom_type": "Attached",
+            "images": [
+                "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"
+            ],
+            "amenities": ["WiFi", "AC", "Free Parking", "Gym", "Fridge"],
+            "uniqueness": ["Scenic View", "Peaceful", "Luxury"]
         }
     ]
 
     for item in listings_data:
+        bedrooms = item.get("bedrooms", max(1, item["maximum_guests"] // 2))
+        beds = item.get("beds", max(1, item["maximum_guests"] - 1))
         cursor.execute("""
-            INSERT INTO listings (host_id, house_name, street, location, state, description, price_per_night, maximum_guests, property_type, bathroom_type, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            INSERT INTO listings (
+                host_id, house_name, street, location, state, description,
+                price_per_night, maximum_guests, bedrooms, beds, property_type, place_type, bathroom_type, is_active
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         """, (
             item["host_id"], item["house_name"], item["street"], item["location"],
             item["state"], item["description"], item["price_per_night"],
-            item["maximum_guests"], item["property_type"], item["bathroom_type"]
+            item["maximum_guests"], bedrooms, beds, item["property_type"], item["place_type"], item["bathroom_type"]
         ))
         listing_id = cursor.lastrowid
 

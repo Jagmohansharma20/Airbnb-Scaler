@@ -34,7 +34,10 @@ function EditHostingContent({ id }: { id: string }) {
   const [description, setDescription] = useState('');
   const [pricePerNight, setPricePerNight] = useState<string>('');
   const [maximumGuests, setMaximumGuests] = useState<number>(4);
+  const [bedrooms, setBedrooms] = useState<number>(1);
+  const [beds, setBeds] = useState<number>(1);
   const [propertyType, setPropertyType] = useState<string>('House');
+  const [placeType, setPlaceType] = useState<string>('Entire place');
   const [bathroomType, setBathroomType] = useState<string>('Attached');
   const [phone, setPhone] = useState('');
 
@@ -70,7 +73,10 @@ function EditHostingContent({ id }: { id: string }) {
         setDescription(data.description);
         setPricePerNight(String(data.price_per_night));
         setMaximumGuests(data.maximum_guests);
-        setPropertyType(data.property_type);
+        setBedrooms(data.bedrooms || 1);
+        setBeds(data.beds || 1);
+        setPropertyType(data.property_type || 'House');
+        setPlaceType(data.place_type || 'Entire place');
         setBathroomType(data.bathroom_type);
         setPhone(data.host.phone || user?.phone || '');
 
@@ -121,6 +127,16 @@ function EditHostingContent({ id }: { id: string }) {
       return;
     }
 
+    if (!propertyType.trim()) {
+      error('Please select a property type.');
+      return;
+    }
+
+    if (!placeType.trim()) {
+      error('Please select a place type.');
+      return;
+    }
+
     if (!image1.trim() || !image2.trim() || !image3.trim()) {
       error('Please provide all 3 image URLs.');
       return;
@@ -129,6 +145,11 @@ function EditHostingContent({ id }: { id: string }) {
     const price = parseFloat(pricePerNight);
     if (isNaN(price) || price <= 0) {
       error('Please enter a valid price per night.');
+      return;
+    }
+
+    if (bedrooms < 1 || beds < 1) {
+      error('Bedrooms and Beds must be positive integers (at least 1).');
       return;
     }
 
@@ -150,7 +171,10 @@ function EditHostingContent({ id }: { id: string }) {
           description: description.trim(),
           price_per_night: price,
           maximum_guests: maximumGuests,
+          bedrooms: Math.max(1, Math.round(bedrooms)),
+          beds: Math.max(1, Math.round(beds)),
           property_type: propertyType,
+          place_type: placeType,
           bathroom_type: bathroomType,
           phone: phone.trim() || undefined,
           images: [image1.trim(), image2.trim(), image3.trim()],
@@ -317,7 +341,7 @@ function EditHostingContent({ id }: { id: string }) {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                   Price Per Night (&#8377;) <span className="text-rose-500">*</span>
@@ -340,9 +364,39 @@ function EditHostingContent({ id }: { id: string }) {
                   type="number"
                   required
                   min={1}
-                  max={30}
+                  max={50}
                   value={maximumGuests}
-                  onChange={(e) => setMaximumGuests(Number(e.target.value))}
+                  onChange={(e) => setMaximumGuests(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm font-semibold focus:ring-2 focus:ring-[#FF385C] focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Bedrooms <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  max={50}
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm font-semibold focus:ring-2 focus:ring-[#FF385C] focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Beds <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  max={50}
+                  value={beds}
+                  onChange={(e) => setBeds(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm font-semibold focus:ring-2 focus:ring-[#FF385C] focus:border-transparent outline-none"
                 />
               </div>
@@ -358,11 +412,32 @@ function EditHostingContent({ id }: { id: string }) {
                 >
                   <option value="House">House</option>
                   <option value="Apartment">Apartment</option>
+                  <option value="Villa">Villa</option>
                   <option value="Hotel">Hotel</option>
+                  <option value="Cottage">Cottage</option>
+                  <option value="Cabin">Cabin</option>
+                  <option value="Guesthouse">Guesthouse</option>
+                  <option value="Resort">Resort</option>
                 </select>
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Place Type <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={placeType}
+                  onChange={(e) => setPlaceType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#FF385C] focus:border-transparent outline-none bg-white cursor-pointer"
+                >
+                  <option value="Entire place">Entire place</option>
+                  <option value="Private room">Private room</option>
+                  <option value="Hotel room">Hotel room</option>
+                  <option value="Shared room">Shared room</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                   Bathroom <span className="text-rose-500">*</span>
                 </label>

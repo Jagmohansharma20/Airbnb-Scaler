@@ -17,6 +17,7 @@ import {
   Refrigerator,
   Sparkles, 
   Home, 
+  Bed,
   Bath, 
   Users, 
   Mail, 
@@ -205,31 +206,43 @@ function ListingDetailsContent({ id }: { id: string }) {
         {/* Left 2 Cols: Details & Amenities */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Host Info Box (Section 16) */}
+          {/* Host Info Box */}
           <div className="flex items-center justify-between pb-6 border-b border-gray-200">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                Entire {listing.property_type} hosted by {listing.host.name}
+                {listing.place_type || 'Entire place'} in {listing.property_type} hosted by {listing.host.name}
               </h2>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  {listing.maximum_guests} {listing.maximum_guests === 1 ? 'guest' : 'guests'} max
+              <p className="text-sm text-gray-500 mt-1 flex items-center flex-wrap gap-2 sm:gap-3">
+                <span className="font-medium text-gray-800">
+                  {listing.maximum_guests} {listing.maximum_guests === 1 ? 'guest' : 'guests'}
                 </span>
                 <span>&middot;</span>
-                <span className="flex items-center gap-1">
-                  <Home className="w-4 h-4 text-gray-400" />
-                  {listing.property_type}
+                <span className="font-medium text-gray-800">
+                  {listing.bedrooms || 1} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}
                 </span>
                 <span>&middot;</span>
-                <span className="flex items-center gap-1">
-                  <Bath className="w-4 h-4 text-gray-400" />
-                  {listing.bathroom_type} bathroom
+                <span className="font-medium text-gray-800">
+                  {listing.beds || 1} {listing.beds === 1 ? 'bed' : 'beds'}
+                </span>
+                <span>&middot;</span>
+                <span className="font-medium text-gray-800">
+                  {listing.bathroom_type} bath
                 </span>
               </p>
+              
+              <div className="flex items-center flex-wrap gap-3 mt-3 text-xs text-gray-600">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 font-semibold text-gray-700">
+                  <Home className="w-3.5 h-3.5 text-[#FF385C]" />
+                  {listing.property_type}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 font-semibold text-gray-700">
+                  <Bed className="w-3.5 h-3.5 text-[#FF385C]" />
+                  {listing.place_type || 'Entire place'}
+                </span>
+              </div>
             </div>
 
-            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#FF385C] to-rose-400 text-white font-extrabold text-xl flex items-center justify-center shadow-md">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#FF385C] to-rose-400 text-white font-extrabold text-xl flex items-center justify-center shadow-md shrink-0">
               {listing.host.name.charAt(0).toUpperCase()}
             </div>
           </div>

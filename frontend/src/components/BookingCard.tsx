@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Star, ShieldCheck, Users, Calendar } from 'lucide-react';
+import { Star, ShieldCheck, MessageSquare } from 'lucide-react';
 import { ListingDetail } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -21,6 +21,7 @@ export function BookingCard({ listing }: BookingCardProps) {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [guests, setGuests] = useState<number>(1);
+  const [guestMessage, setGuestMessage] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -36,9 +37,12 @@ export function BookingCard({ listing }: BookingCardProps) {
     return diffDays > 0 ? diffDays : 0;
   }, [startDate, endDate]);
 
-  const basePrice = numberOfNights * listing.price_per_night;
-  const serviceFee = numberOfNights > 0 ? 1500 : 0;
-  const totalPrice = basePrice + serviceFee;
+  // Strict integer pricing calculations (Section 10-16)
+  const nightlyRate = Math.round(listing.price_per_night);
+  const basePrice = numberOfNights * nightlyRate;
+  const additionalCharges = Math.round(basePrice * 0.20);
+  const discount = Math.round(basePrice * 0.07);
+  const totalPrice = basePrice + additionalCharges - discount;
 
   // Check if selected dates overlap with existing booked dates
   const isOverlap = useMemo(() => {
@@ -76,7 +80,12 @@ export function BookingCard({ listing }: BookingCardProps) {
       return;
     }
 
-    // Open mock payment modal
+    if (guestMessage.length > 500) {
+      error('Message must be 500 characters or less.');
+      return;
+    }
+
+    // Open mock Razorpay payment modal
     setIsModalOpen(true);
   };
 
@@ -92,6 +101,7 @@ export function BookingCard({ listing }: BookingCardProps) {
           start_date: startDate,
           end_date: endDate,
           guests,
+          guest_message: guestMessage.trim() || undefined,
         }),
       });
 
@@ -104,6 +114,11 @@ export function BookingCard({ listing }: BookingCardProps) {
     }
   };
 
+  const handlePaymentCancel = () => {
+    setIsModalOpen(false);
+    error('Payment cancelled. Your booking was not created.');
+  };
+
   return (
     <>
       <div className="sticky top-28 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl space-y-6">
@@ -112,7 +127,7 @@ export function BookingCard({ listing }: BookingCardProps) {
         <div className="flex justify-between items-baseline">
           <div>
             <span className="text-2xl font-bold text-gray-900">
-              &#8377;{listing.price_per_night.toLocaleString()}
+              &#8377;{nightlyRate.toLocaleString()}
             </span>
             <span className="text-gray-500 text-sm"> / night</span>
           </div>
@@ -187,6 +202,28 @@ export function BookingCard({ listing }: BookingCardProps) {
             </div>
           </div>
 
+          {/* Feature 4: Message to Host Field (Section 20 & 21) */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1">
+                <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
+                <span>Message to Host</span>
+                <span className="text-gray-400 font-normal normal-case">(optional)</span>
+              </label>
+              <span className="text-[10px] text-gray-400 font-medium">
+                {guestMessage.length}/500
+              </span>
+            </div>
+            <textarea
+              rows={3}
+              maxLength={500}
+              value={guestMessage}
+              onChange={(e) => setGuestMessage(e.target.value)}
+              placeholder="Hi, I'll arrive around 6 PM. Looking forward to the stay!"
+              className="w-full p-3 rounded-2xl border border-gray-300 text-gray-900 text-xs focus:ring-2 focus:ring-[#FF385C] focus:border-transparent outline-none resize-none transition-all placeholder:text-gray-400 bg-gray-50/50 hover:bg-white focus:bg-white"
+            />
+          </div>
+
           {/* Booked dates indicator if any */}
           {isOverlap && (
             <p className="text-xs font-medium text-[#FF385C] bg-rose-50 p-2.5 rounded-xl border border-rose-100">
@@ -205,26 +242,33 @@ export function BookingCard({ listing }: BookingCardProps) {
         </form>
 
         <p className="text-center text-xs text-gray-500 font-medium">
-          You won&apos;t be charged yet &middot; Mock payment
+          You won&apos;t be charged yet &middot; Mock Razorpay checkout
         </p>
 
-        {/* Dynamic Price Breakdown */}
+        {/* Feature 3: Dynamic Integer Price Breakdown (Section 10-16 & 40-43) */}
         {numberOfNights > 0 && !isOverlap && (
           <div className="space-y-3 pt-4 border-t border-gray-100 text-sm text-gray-700">
+            <h4 className="font-bold text-gray-900 text-sm">Price Details</h4>
+            
             <div className="flex justify-between">
               <span className="underline">
-                &#8377;{listing.price_per_night.toLocaleString()} &times; {numberOfNights} {numberOfNights === 1 ? 'night' : 'nights'}
+                &#8377;{nightlyRate.toLocaleString()} &times; {numberOfNights} {numberOfNights === 1 ? 'night' : 'nights'}
               </span>
               <span>&#8377;{basePrice.toLocaleString()}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="underline">Airbnb service fee</span>
-              <span>&#8377;{serviceFee.toLocaleString()}</span>
+              <span className="underline">Additional charges</span>
+              <span>&#8377;{additionalCharges.toLocaleString()}</span>
+            </div>
+
+            <div className="flex justify-between text-emerald-600 font-medium">
+              <span className="underline">Discount</span>
+              <span>-&#8377;{discount.toLocaleString()}</span>
             </div>
 
             <div className="flex justify-between font-bold text-gray-900 text-base pt-3 border-t border-gray-100">
-              <span>Total before taxes</span>
+              <span>Total</span>
               <span>&#8377;{totalPrice.toLocaleString()}</span>
             </div>
           </div>
@@ -237,12 +281,17 @@ export function BookingCard({ listing }: BookingCardProps) {
         </div>
       </div>
 
-      {/* Mock Payment Flow Modal */}
+      {/* Feature 5: Mock Razorpay-Style Payment Modal (Section 26-31) */}
       <MockPaymentModal
         isOpen={isModalOpen}
         totalPrice={totalPrice}
         houseName={listing.house_name}
+        nights={numberOfNights}
+        startDate={startDate}
+        endDate={endDate}
+        guests={guests}
         onSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
       />
     </>
   );

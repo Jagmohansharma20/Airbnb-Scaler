@@ -133,13 +133,13 @@ function BookingsContent() {
                     <div className="text-right">
                       <p className="text-xs uppercase text-gray-400 font-semibold tracking-wider">Total Paid</p>
                       <p className="text-xl font-extrabold text-gray-900">
-                        &#8377;{booking.total_price.toLocaleString()}
+                        &#8377;{Math.round(booking.total_price).toLocaleString()}
                       </p>
                     </div>
                   </div>
 
                   {/* Dates & Guests row */}
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700 pt-2">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700 pt-2">
                     <div className="flex items-center gap-2 bg-gray-50 px-3.5 py-1.5 rounded-xl border border-gray-200">
                       <Calendar className="w-4 h-4 text-[#FF385C]" />
                       <span className="font-semibold">{booking.start_date}</span>
@@ -151,6 +151,12 @@ function BookingsContent() {
                       <Users className="w-4 h-4 text-[#FF385C]" />
                       <span className="font-medium">{booking.guests} {booking.guests === 1 ? 'Guest' : 'Guests'}</span>
                     </div>
+
+                    {booking.nights && (
+                      <div className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700">
+                        {booking.nights} {booking.nights === 1 ? 'Night' : 'Nights'}
+                      </div>
+                    )}
 
                     {booking.host_name && (
                       <div className="text-xs text-gray-500">

@@ -91,9 +91,9 @@ export function ListingCard({ listing, onFavoriteChange }: ListingCardProps) {
           />
         </button>
 
-        {/* Property Type Badge */}
+        {/* Property Type & Place Type Badge */}
         <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-semibold text-gray-800 shadow-sm">
-          {listing.property_type}
+          {listing.property_type}{listing.place_type ? ` · ${listing.place_type}` : ''}
         </div>
       </div>
 

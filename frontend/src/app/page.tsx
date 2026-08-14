@@ -5,23 +5,23 @@ import dynamic from 'next/dynamic';
 import { SearchBar } from '@/components/SearchBar';
 import { ListingCard } from '@/components/ListingCard';
 import { FilterModal, FilterValues } from '@/components/FilterModal';
-import { ListingSummary } from '@/types';
+import { Pagination } from '@/components/Pagination';
+import { ListingSummary, PaginatedListingsResponse } from '@/types';
 import { apiRequest } from '@/lib/api';
 import { 
   Palmtree, 
   Building2, 
   Trees, 
-  Sparkles, 
-  Mountain, 
-  Waves, 
   Castle, 
+  Hotel as HotelIcon,
+  Tent,
+  Building,
   Home as HomeIcon,
   SearchX,
   SlidersHorizontal,
   Map as MapIcon,
-  MapPinOff,
   RotateCcw,
-  List
+  Compass
 } from 'lucide-react';
 
 // Dynamically import LocationMap to prevent SSR window/document errors
@@ -38,20 +38,25 @@ const LocationMap = dynamic(
 );
 
 const CATEGORIES = [
-  { label: 'All Homes', icon: HomeIcon },
-  { label: 'Villas', icon: Castle },
-  { label: 'Beachfront', icon: Waves },
-  { label: 'Cabins', icon: Trees },
-  { label: 'Iconic Cities', icon: Building2 },
-  { label: 'Mountains', icon: Mountain },
-  { label: 'Tropical', icon: Palmtree },
-  { label: 'Luxe', icon: Sparkles },
+  { label: 'All', icon: Compass, type: undefined },
+  { label: 'House', icon: HomeIcon, type: 'House' },
+  { label: 'Apartment', icon: Building2, type: 'Apartment' },
+  { label: 'Villa', icon: Castle, type: 'Villa' },
+  { label: 'Hotel', icon: HotelIcon, type: 'Hotel' },
+  { label: 'Cottage', icon: Building, type: 'Cottage' },
+  { label: 'Cabin', icon: Trees, type: 'Cabin' },
+  { label: 'Guesthouse', icon: Tent, type: 'Guesthouse' },
+  { label: 'Resort', icon: Palmtree, type: 'Resort' },
 ];
 
 export default function HomePage() {
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All Homes');
+  
+  // Pagination State (10 listings per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalListings, setTotalListings] = useState<number>(0);
   
   // Search Bar State
   const [searchParams, setSearchParams] = useState<{
@@ -61,7 +66,7 @@ export default function HomePage() {
     guests?: number;
   }>({});
 
-  // Filter Modal State
+  // Filter Modal State (propertyType shared with Category Row)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [filterParams, setFilterParams] = useState<FilterValues>({
     amenities: [],
@@ -75,6 +80,7 @@ export default function HomePage() {
     (filterParams.minPrice ? 1 : 0) +
     (filterParams.maxPrice ? 1 : 0) +
     (filterParams.propertyType ? 1 : 0) +
+    (filterParams.placeType ? filterParams.placeType.split(',').length : 0) +
     (filterParams.amenities.length > 0 ? filterParams.amenities.length : 0) +
     (filterParams.minRating ? 1 : 0);
 
@@ -83,6 +89,10 @@ export default function HomePage() {
     try {
       const query = new URLSearchParams();
       
+      // Pagination parameters
+      query.append('page', String(currentPage));
+      query.append('limit', '20');
+
       // Search parameters
       if (searchParams.location) query.append('location', searchParams.location);
       if (searchParams.start_date) query.append('start_date', searchParams.start_date);
@@ -93,19 +103,31 @@ export default function HomePage() {
       if (filterParams.minPrice) query.append('min_price', String(filterParams.minPrice));
       if (filterParams.maxPrice) query.append('max_price', String(filterParams.maxPrice));
       if (filterParams.propertyType) query.append('property_type', filterParams.propertyType);
+      if (filterParams.placeType) query.append('place_type', filterParams.placeType);
       if (filterParams.amenities.length > 0) query.append('amenities', filterParams.amenities.join(','));
       if (filterParams.minRating) query.append('min_rating', String(filterParams.minRating));
 
       const queryString = query.toString() ? `?${query.toString()}` : '';
-      const data = await apiRequest<ListingSummary[]>(`/listings${queryString}`);
-      setListings(data);
+      const data = await apiRequest<PaginatedListingsResponse | ListingSummary[]>(`/listings${queryString}`);
+      
+      if (Array.isArray(data)) {
+        setListings(data);
+        setTotalPages(1);
+        setTotalListings(data.length);
+      } else {
+        setListings(data.listings || []);
+        setTotalPages(data.pagination?.total_pages || data.total_pages || 1);
+        setTotalListings(data.pagination?.total || data.total || 0);
+      }
     } catch (err) {
       console.error('Failed to fetch listings:', err);
       setListings([]);
+      setTotalPages(1);
+      setTotalListings(0);
     } finally {
       setIsLoading(false);
     }
-  }, [searchParams, filterParams]);
+  }, [currentPage, searchParams, filterParams]);
 
   useEffect(() => {
     fetchListings();
@@ -117,29 +139,47 @@ export default function HomePage() {
     end_date?: string;
     guests?: number;
   }) => {
+    setCurrentPage(1);
     setSearchParams(params);
   };
 
+  const handleCategoryClick = (categoryType?: string) => {
+    setCurrentPage(1);
+    setFilterParams((prev) => ({
+      ...prev,
+      propertyType: categoryType,
+    }));
+  };
+
   const handleSelectMapLocation = (locationName: string) => {
+    setCurrentPage(1);
     setSearchParams((prev) => ({ ...prev, location: locationName }));
   };
 
   const handleClearMapLocation = () => {
+    setCurrentPage(1);
     setSearchParams((prev) => ({ ...prev, location: undefined }));
   };
 
   const handleApplyFilters = (newFilters: FilterValues) => {
+    setCurrentPage(1);
     setFilterParams(newFilters);
   };
 
   const handleClearFilters = () => {
+    setCurrentPage(1);
     setFilterParams({ amenities: [] });
   };
 
   const handleResetAll = () => {
+    setCurrentPage(1);
     setSearchParams({});
     setFilterParams({ amenities: [] });
-    setSelectedCategory('All Homes');
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFavoriteChange = (listingId: number, isFav: boolean) => {
@@ -162,19 +202,20 @@ export default function HomePage() {
       {/* 1. Airbnb Search Bar */}
       <SearchBar onSearch={handleSearch} initialValues={searchParams} />
 
-      {/* 2. Category Carousel + Filters Button + Map Toggle */}
+      {/* 2. Category Navigation Row + Filters Button + Map Toggle */}
       <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3 pt-2">
         
         {/* Categories (scrollable) */}
-        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none select-none flex-1">
+        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none select-none flex-1 py-1">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
-            const isSelected = selectedCategory === cat.label;
+            const isSelected = (!filterParams.propertyType && !cat.type) || 
+              (filterParams.propertyType?.toLowerCase() === cat.type?.toLowerCase());
             return (
               <button
                 key={cat.label}
-                onClick={() => setSelectedCategory(cat.label)}
-                className={`flex flex-col items-center gap-2 pb-1 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                onClick={() => handleCategoryClick(cat.type)}
+                className={`flex flex-col items-center gap-2 pb-1.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 shrink-0 ${
                   isSelected
                     ? 'border-gray-900 text-gray-900 font-bold opacity-100'
                     : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 opacity-70 hover:opacity-100'
@@ -271,6 +312,12 @@ export default function HomePage() {
             </span>
           )}
 
+          {filterParams.placeType && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-gray-300 text-gray-800 font-semibold">
+              Place: {filterParams.placeType.split(',').join(', ')}
+            </span>
+          )}
+
           {filterParams.amenities.length > 0 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-gray-300 text-gray-800 font-semibold">
               Amenities: {filterParams.amenities.join(', ')}
@@ -307,9 +354,16 @@ export default function HomePage() {
           ))}
         </div>
       ) : listings.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between text-sm text-gray-600 font-medium">
-            <span>Showing {listings.length} {listings.length === 1 ? 'home' : 'homes'}</span>
+            <span>
+              Showing {listings.length} {listings.length === 1 ? 'home' : 'homes'}
+              {totalListings > listings.length && (
+                <span className="text-gray-400 font-normal ml-1.5">
+                  &middot; Page {currentPage} of {totalPages} ({totalListings} total)
+                </span>
+              )}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
@@ -321,15 +375,27 @@ export default function HomePage() {
               />
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            isLoading={isLoading}
+          />
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-gray-50 rounded-3xl border border-gray-200 p-8">
           <div className="w-16 h-16 rounded-full bg-rose-50 text-[#FF385C] flex items-center justify-center">
             <SearchX className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">No homes match your filters</h3>
+          <h3 className="text-xl font-bold text-gray-900">
+            {filterParams.propertyType ? `No ${filterParams.propertyType.toLowerCase()}s found.` : 'No homes match your filters.'}
+          </h3>
           <p className="text-gray-500 max-w-sm text-sm">
-            Try changing your price range, location, dates, or amenities to discover available stays.
+            {filterParams.propertyType
+              ? 'Try another property type or adjust your filters.'
+              : 'Try changing your price range, location, dates, or amenities to discover available stays.'}
           </p>
           <button
             onClick={handleResetAll}
@@ -349,27 +415,6 @@ export default function HomePage() {
         onApply={handleApplyFilters}
         onClear={handleClearFilters}
       />
-
-      {/* 6. Floating Airbnb Show Map / Show List Button */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
-        <button
-          type="button"
-          onClick={() => setShowMap((prev) => !prev)}
-          className="flex items-center gap-2 px-5 py-3 rounded-full bg-gray-900 hover:bg-black text-white text-sm font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all border border-gray-700"
-        >
-          {showMap ? (
-            <>
-              <List className="w-4 h-4 text-[#FF385C]" />
-              <span>Show list</span>
-            </>
-          ) : (
-            <>
-              <MapIcon className="w-4 h-4 text-[#FF385C]" />
-              <span>Show map</span>
-            </>
-          )}
-        </button>
-      </div>
 
     </div>
   );

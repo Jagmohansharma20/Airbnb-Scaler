@@ -38,13 +38,32 @@ export interface ListingSummary {
   state: string;
   price_per_night: number;
   maximum_guests: number;
+  bedrooms?: number;
+  beds?: number;
   property_type: string;
+  place_type: string;
   bathroom_type: string;
   image_url: string;
   rating: number | null;
   review_count: number;
   is_favourite?: boolean;
   is_active?: boolean;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface PaginatedListingsResponse {
+  listings: ListingSummary[];
+  pagination: PaginationMeta;
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
 }
 
 export interface ListingDetail {
@@ -58,7 +77,10 @@ export interface ListingDetail {
   description: string;
   price_per_night: number;
   maximum_guests: number;
+  bedrooms: number;
+  beds: number;
   property_type: string;
+  place_type: string;
   bathroom_type: string;
   images: string[];
   amenities: string[];
@@ -83,7 +105,13 @@ export interface Booking {
   start_date: string;
   end_date: string;
   guests: number;
+  nights?: number;
+  price_per_night?: number;
+  base_price?: number;
+  additional_charges?: number;
+  discount?: number;
   total_price: number;
+  guest_message?: string | null;
   status: 'confirmed' | 'cancelled';
   created_at: string;
   host_name?: string;
@@ -104,7 +132,13 @@ export interface HostBooking {
   start_date: string;
   end_date: string;
   guests: number;
+  nights?: number;
+  price_per_night?: number;
+  base_price?: number;
+  additional_charges?: number;
+  discount?: number;
   total_price: number;
+  guest_message?: string | null;
   status: 'confirmed' | 'cancelled';
   is_active: boolean;
   created_at: string;

@@ -17,7 +17,9 @@ def get_my_favorites(
         SELECT 
             f.id AS fav_id, f.listing_id, f.created_at AS fav_created_at,
             l.id, l.host_id, l.house_name, l.street, l.location, l.state,
-            l.price_per_night, l.maximum_guests, l.property_type, l.bathroom_type,
+            l.price_per_night, l.maximum_guests, l.property_type,
+            COALESCE(l.place_type, 'Entire place') AS place_type,
+            l.bathroom_type,
             COALESCE(
                 (SELECT image_url FROM listing_images WHERE listing_id = l.id AND image_order = 1 LIMIT 1),
                 (SELECT image_url FROM listing_images WHERE listing_id = l.id ORDER BY id ASC LIMIT 1),
@@ -49,6 +51,7 @@ def get_my_favorites(
                 "price_per_night": r["price_per_night"],
                 "maximum_guests": r["maximum_guests"],
                 "property_type": r["property_type"],
+                "place_type": r["place_type"] if "place_type" in r.keys() else "Entire place",
                 "bathroom_type": r["bathroom_type"],
                 "image_url": r["image_url"],
                 "rating": rating_val,

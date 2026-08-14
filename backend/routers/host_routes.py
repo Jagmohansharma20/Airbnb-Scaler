@@ -16,7 +16,12 @@ def get_host_listings(
     cursor.execute("""
         SELECT 
             l.id, l.host_id, l.house_name, l.street, l.location, l.state,
-            l.price_per_night, l.maximum_guests, l.property_type, l.bathroom_type,
+            l.price_per_night, l.maximum_guests,
+            COALESCE(l.bedrooms, 1) AS bedrooms,
+            COALESCE(l.beds, 1) AS beds,
+            l.property_type,
+            COALESCE(l.place_type, 'Entire place') AS place_type,
+            l.bathroom_type,
             COALESCE(l.is_active, 1) AS is_active,
             COALESCE(
                 (SELECT image_url FROM listing_images WHERE listing_id = l.id AND image_order = 1 LIMIT 1),
@@ -43,7 +48,10 @@ def get_host_listings(
             "state": r["state"],
             "price_per_night": r["price_per_night"],
             "maximum_guests": r["maximum_guests"],
+            "bedrooms": r["bedrooms"] if "bedrooms" in r.keys() else 1,
+            "beds": r["beds"] if "beds" in r.keys() else 1,
             "property_type": r["property_type"],
+            "place_type": r["place_type"] if "place_type" in r.keys() else "Entire place",
             "bathroom_type": r["bathroom_type"],
             "image_url": r["image_url"],
             "rating": rating_val,
@@ -62,7 +70,13 @@ def get_host_bookings(
     cursor.execute("""
         SELECT 
             b.id, b.listing_id, b.user_id AS guest_id, b.start_date, b.end_date,
-            b.guests, b.total_price, b.status, b.created_at,
+            b.guests,
+            COALESCE(b.nights, 1) AS nights,
+            COALESCE(b.price_per_night, l.price_per_night) AS price_per_night,
+            COALESCE(b.base_price, b.total_price) AS base_price,
+            COALESCE(b.additional_charges, 0) AS additional_charges,
+            COALESCE(b.discount, 0) AS discount,
+            b.total_price, b.guest_message, b.status, b.created_at,
             l.house_name, l.location, l.state, COALESCE(l.is_active, 1) AS is_active,
             u.name AS guest_name, u.email AS guest_email, u.phone AS guest_phone,
             COALESCE(
@@ -93,7 +107,13 @@ def get_host_bookings(
             "start_date": r["start_date"],
             "end_date": r["end_date"],
             "guests": r["guests"],
+            "nights": r["nights"] if "nights" in r.keys() else 1,
+            "price_per_night": r["price_per_night"] if "price_per_night" in r.keys() else None,
+            "base_price": r["base_price"] if "base_price" in r.keys() else None,
+            "additional_charges": r["additional_charges"] if "additional_charges" in r.keys() else 0,
+            "discount": r["discount"] if "discount" in r.keys() else 0,
             "total_price": r["total_price"],
+            "guest_message": r["guest_message"] if "guest_message" in r.keys() else None,
             "status": r["status"],
             "is_active": bool(r["is_active"]),
             "created_at": str(r["created_at"]),
