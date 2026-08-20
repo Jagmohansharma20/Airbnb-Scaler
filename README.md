@@ -133,12 +133,3 @@ python test_e2e_full_flow.py
 ```
 
 ---
-
-## Test Accounts (Pre-Seeded)
-
-| Name | Email | Password | Role |
-| :--- | :--- | :--- | :--- |
-| **Balaji Dev** | `balaji@airbnb.com` | `password123` | Host / Traveler |
-| **Aarav Sharma** | `aarav@airbnb.com` | `password123` | Host / Traveler |
-| **Priya Patel** | `priya@airbnb.com` | `password123` | Host / Traveler |
-| **Sarah Jenkins** | `sarah@airbnb.com` | `password123` | Host / Traveler |
