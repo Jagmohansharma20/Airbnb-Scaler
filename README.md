@@ -29,7 +29,7 @@ A modern, production-grade Airbnb clone full-stack web application built with **
   - **Sticky Booking Card**:
     - Interactive check-in & check-out date picker disabling booked dates.
     - Guest count selector.
-    - Dynamic price breakdown (`nights * price` + `₹1,500 service fee` = `Total`).
+    - Dynamic price breakdown (`nights * price` + `20% total price` - `7% discount price` = `Total`).
     - **Mock Payment Modal**: Animated payment processing and confirmation.
   - **Review System**: Average rating calculation from reviews, review list, and interactive "Leave a Review" form with star selector (1-5) and comments.
 
